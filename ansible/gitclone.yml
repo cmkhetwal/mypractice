@@ -1,0 +1,11 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: install git
+      apt:
+        name: git
+        state: present
+    - name: git clone
+      git:
+        repo: "https://github.com/lerndevops/labs.git"
+        dest: /home/devops/githubclone

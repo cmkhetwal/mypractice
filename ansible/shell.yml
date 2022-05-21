@@ -1,0 +1,10 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: execute a shell
+      shell: touch /tmp/testfile
+      register: abc
+    - debug:
+        msg: "{{abc.stdout_lines}}"
+    - name: execute a command
+      command: echo "executing a command"    

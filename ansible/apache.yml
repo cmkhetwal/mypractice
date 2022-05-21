@@ -1,0 +1,23 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: install webserver redhat or ubuntu
+      yum:
+        name: httpd
+        state: latest
+      when: ansible_distribution == "Redhat"
+    - name: start the service 
+      service:
+        name: httpd
+        state: started
+      when: ansible_distribution == "Redhat"
+    - name: install a webserver on ubuntu
+      apt:
+        name: apache2
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+    - name: start the service 
+      service:
+        name: apache2
+        state: started
+      when: ansible_distribution == "Ubuntu"

@@ -1,0 +1,5 @@
+- hosts: all
+  tasks:
+    - name: check the os of the server
+      debug:
+        msg: "Os vendor = {{ansible_distribution}}"

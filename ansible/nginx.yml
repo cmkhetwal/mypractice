@@ -1,0 +1,13 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: ensure nginx
+      apt:
+        name: nginx
+        state: latest
+    - name: copy the line to index page
+      shell: echo "hi there" > "/var/www/html/index.html"
+    - name: start nginx
+      service:
+        name: nginx
+        state: restarted

@@ -1,0 +1,13 @@
+FROM ubuntu:18.04
+
+RUN apt-get -y update 
+RUN apt-get -y install openjdk-8-jdk wget
+
+RUN wget https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.78/bin/apache-tomcat-8.5.78.tar.gz -O /tmp/tomcat.tar.gz
+RUN cd /tmp && tar xvfz tomcat.tar.gz
+RUN mv /tmp/apache-tomcat-8.5.78 /opt/tomcat
+
+COPY sampleapp.war /opt/tomcat/webapps/
+
+EXPOSE 8080
+CMD /opt/tomcat/bin/catalina.sh run
