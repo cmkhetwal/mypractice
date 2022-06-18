@@ -1,0 +1,79 @@
+Setting up Kubernetes Cluster
+
+first setup nodes having more then 2 gb ram
+
+now install container runtime - This needs to be done on all nodes
+  - https://docs.docker.com/engine/install/ubuntu/
+
+
+Now install cri-dockerd adapter to integrate Docker Engine with Kubernetes - This needs to be done on all nodes
+To install, on a Linux system that uses systemd, and already has Docker Engine installed
+
+# Run these commands as root
+###Install GO###
+wget https://storage.googleapis.com/golang/getgo/installer_linux
+chmod +x ./installer_linux
+./installer_linux
+source ~/.bash_profile
+
+git clone https://github.com/Mirantis/cri-dockerd.git
+cd cri-dockerd
+mkdir bin
+go get && go build -o bin/cri-dockerd
+mkdir -p /usr/local/bin
+install -o root -g root -m 0755 bin/cri-dockerd /usr/local/bin/cri-dockerd
+cp -a packaging/systemd/* /etc/systemd/system
+sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd/system/cri-docker.service
+systemctl daemon-reload
+systemctl enable cri-docker.service
+systemctl enable --now cri-docker.socket
+
+Now change the cgroup driver to systemd for kubernetes - This needs to be done on all nodes
+
+vi /etc/docker/daemon.json
+
+{
+  "exec-opts": ["native.cgroupdriver=systemd"]
+}
+
+:wq!
+
+systemctl restart docker
+
+Install kubernetes tools - This needs to done on all nodes
+
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+
+Initialize the Kubernetes cluster
+
+kubeadm init --cri-socket unix:///var/run/cri-dockerd.sock  -> This will only run in kube master node
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Now join the worker nodes
+
+kubeadm join 172.31.18.209:6443 --token <your token> --cri-socket unix:///var/run/cri-dockerd.sock
+
+Now check the worker nodes in kube master by 
+
+kubectl get nodes
+
+if they are not ready then we need to install the network driver
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+if this commands give some message , no issues just check the nodes information in kube master
+
+
+
+
+
+
