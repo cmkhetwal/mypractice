@@ -1,0 +1,106 @@
+Please execute all the below commands on master and worker node unless specified specially
+
+create centos machines for master and worker (2 CPU each vm are must and internet should be working on vm, 4 GB of ram per vm will suffice)
+
+
+
+Install Docker
+	sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+	sudo yum-config-manager --add-repo   https://download.docker.com/linux/centos/docker-ce.repo
+	sudo yum update -y && sudo yum install -y   containerd.io-1.2.13   docker-ce-19.03.11   docker-ce-cli-19.03.11   
+	mkdir /etc/docker
+
+cat <<EOF | sudo tee /etc/docker/daemon.json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2",
+  "storage-opts": [
+    "overlay2.override_kernel_check=true"
+  ]
+}
+EOF
+
+	sudo mkdir -p /etc/systemd/system/docker.service.d
+	sudo systemctl daemon-reload
+	systemctl restart docker
+	systemctl status docker
+	systemctl enable docker
+	
+	
+Create Kubernetes repo
+
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+enabled=1
+gpgcheck=0
+EOF
+
+
+Install Kubeadm, kubelet and kubectl
+	yum install -y kubelet-1.23.1 kubeadm-1.23.1 kubectl-1.23.1
+	systemctl enable --now kubelet
+	systemctl daemon-reload
+	systemctl restart kubelet
+===============================================================================================================================================================  
+
+Please execute below command only on Master node
+   
+Initialize kubernetes cluster  
+	kubeadm init
+	
+	
+The output of the above command will be something like below, please read it carefully as all the next steps are mentioned in the below output only
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Now you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 192.168.1.8:6443 --token kiqsue.s3n83m3gvebtv7tr \
+    --discovery-token-ca-cert-hash sha256:116d4bc46bf16c3bd4270ac68354f4501d07560e14577333d366df18752ee3d0	
+
+===============================================================================================================================================================
+
+Please run below command on master -->
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  
+To deploy pod network run any one of the below command on Master --> 
+
+Either go with calico or flannel, just one command needs to be executed
+
+ CALICO -->  kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+ Flannel --> kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+===============================================================================================================================================================
+Now it's time to add worker to our k8s cluster
+
+The command to add worker node is displayed in the output of your master deployment (kubeadm init)
+
+The below command is the sample command, don't copy and paste as it is, copy the command from your kubeadm init output and run it on worker machine
+
+kubeadm join 192.168.1.8:6443 --token kiqsue.s3n83m3gvebtv7tr \
+    --discovery-token-ca-cert-hash sha256:116d4bc46bf16c3bd4270ac68354f4501d07560e14577333d366df18752ee3d0
+	
+===============================================================================================================================================================
+
+Now we are done creating the cluster start executing some kubectl commands as they are listed in the other file GKE.txt
+
+Reference link for installing --> https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/

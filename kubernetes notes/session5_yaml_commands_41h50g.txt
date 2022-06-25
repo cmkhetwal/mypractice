@@ -1,0 +1,215 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard
+provisioner: kubernetes.io/gce-pd
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: testpvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+  storageClassName: standard
+  
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pvc
+spec:
+  containers:
+    - name: myfrontend
+      image: nginx
+      volumeMounts:
+      - mountPath: "/var/www/html"
+        name: mypd
+  volumes:
+    - name: mypd
+      persistentVolumeClaim:
+        claimName: testpvc
+		
+		
+Commands -->
+kubectl get sc
+kubectl get pvc
+kubectl get pv
+		
+---
+1. manual (/etc/kubernetes/manifests) automatically governed by kubelet on master nodes
+---
+
+2. node selector (choose a node using corresponding label) equality based selector
+
+Command to label nodes ->
+kubectl get nodes --show-labels
+kubectl label node k8s-worker app=frontend
+
+To remove label --> 
+kubectl label node k8s-worker app-
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+  nodeSelector:
+    app: frontend
+---
+3. node affinity (set based selector)
+
+Commands to label nodes -->
+
+kubectl label node worker1 zone=us-central-1
+kubectl label node worker2 zone=eu-west-1
+kubectl label node worker2 drbackup=europe
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-affinity-node
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: zone
+            operator: In
+            values:
+            - us-central-1
+            - eu-west-1
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: drbackup
+            operator: In
+            values:
+            - europe
+  containers:
+  - name: nginx
+    image: nginx:latest
+	
+---
+
+4. pod affinity (webserver+redis) utilizes labels of pod's, affinity of a pod to the label of another pod
+   pod anti-affinity (3 nginx pod on different vm's) for HA of pod's, this doesn't hold for node anti-affinity
+   
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cache
+spec:
+  selector:
+    matchLabels:
+      app: cache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cache
+    spec:
+      containers:
+      - name: redis-server
+        image: redis:3.2-alpine
+      nodeSelector:
+        kubernetes.io/hostname: gke-hello-cluster-default-pool-5cc0ce48-fr11
+		
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-redis-cache
+spec:
+  selector:
+    matchLabels:
+      app: web-cache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: web-cache
+    spec:
+      containers:
+      - name: redis-server
+        image: redis:3.2-alpine
+      nodeSelector:
+        kubernetes.io/hostname: gke-hello-cluster-default-pool-5cc0ce48-w041
+		
+---
+
+kind: Deployment
+metadata:
+  name: web-server
+spec:
+  selector:
+    matchLabels:
+      app: web
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - web-cache
+            topologyKey: "kubernetes.io/hostname"
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - cache
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: web-app
+        image: nginx:latest
+		
+---
+
+5. taints and tolerations:
+    applied to nodes, to repel a set of pods
+	running pods will continue
+	new pods look for tolerations
+	toleration is actual definition of taint
+	
+	Commands -->
+	kubectl describe node | grep -i taint
+	kubectl taint node k8s-worker app=webserver:NoSchedule
+	kubectl taint node k8s-worker app:NoSchedule-
+	
+apiVersion: v1
+kind: Pod
+metadata:
+ name: toleration-pod
+spec:
+ containers:
+ - name: nginx
+   image: nginx
+ tolerations:
+ - key: "app"
+   operator: "Equal"
+   value: "webserver"
+   effect: "NoSchedule"

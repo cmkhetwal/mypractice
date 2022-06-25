@@ -1,0 +1,116 @@
+Authentication
+
+useradd -m developer
+
+mkdir developercerts
+
+cd developercerts
+
+openssl genrsa -out user.key
+
+openssl req -new -key user.key -out user.csr -subj "/CN=developer/O=dev"
+
+cat > developer_csr.yaml <<EOF
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: dev-user-request
+spec:
+  request: $(cat user.csr | base64 | tr -d '\n')
+  signerName: kubernetes.io/kube-apiserver-client
+  usages:
+  - digital signature
+  - key encipherment
+  - client auth
+EOF
+
+kubectl create -f developer_csr.yaml
+
+kubectl get csr dev-user-request|awk '{$3=$4=""; print $0}'
+
+kubectl certificate approve dev-user-request
+
+kubectl get csr dev-user-request -o jsonpath='{.status.certificate}' | base64 --decode > developer.crt
+
+openssl x509 -noout -text -in developer.crt
+
+cat ~/.kube/config --> to get kubernetes CA certificate
+
+echo "copy-ca-data-from-.kube/config" | base64 -d > ca.crt
+
+cd ..
+
+chown -R developer:developer developercerts/
+
+cp -rp developercerts/ /home/developer/
+
+kubectl create ns development
+
+sudo su developer
+
+cd /home/developer/developercerts/
+
+kubectl config set-cluster usercluster --server=https://34.68.63.223
+
+kubectl config set-cluster usercluster --certificate-authority=ca.crt
+
+kubectl config set-credentials developer --client-key=user.key --client-certificate=developer.crt
+
+kubectl config set-context userspace --cluster=usercluster --namespace=development --user=developer
+
+kubectl config use-context userspace
+
+kubectl get po
+Error from server (Forbidden): pods is forbidden: User "developer" cannot list resource "pods" in API group "" in the namespace "development"
+
+===========================================================================================================================
+
+Authorization
+
+switch to root user/kubeadmin user to create role and rolebinding from below yaml files
+
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: development
+  name: developer-role
+rules:
+- apiGroups: ["", "extensions", "apps"]
+  resources: ["deployments", "replicasets", "pods"]
+  verbs: ["get", "list", "watch", "create"]
+
+
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: development-binding
+  namespace: development
+subjects:
+- kind: User
+  name: developer
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: developer-role
+  apiGroup: ""
+
+
+Switch back to developer user and test creation and deletion of pods
+user will be able to create but not delete.
+
+kubectl run testpod --image=nginx
+pod/testpod created
+
+kubectl get po
+NAME      READY   STATUS    RESTARTS   AGE
+testpod   1/1     Running   0          4s
+
+kubectl delete po testpod
+Error from server (Forbidden): pods "testpod" is forbidden: User "developer" cannot delete resource "pods" in API group "" in the namespace "development"
+
+
+
+
+

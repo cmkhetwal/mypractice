@@ -1,0 +1,98 @@
+Deployment -->
+Commands:
+
+kubectl create deployment hello-la --image=nginx:1.19.2
+kubectl get pods
+kubectl get deploy
+kubectl get rs
+kubectl expose deployment hello-la --type=LoadBalancer --port 80 --target-port 80
+kubectl get service
+kubectl scale deployment hello-la --replicas=3
+kubectl autoscale deployment hello-la --max 6 --min 4 --cpu-percent 50
+kubectl set image deployment/hello-la hello-la=nginx:1.19.3
+kubectl rollout history deployment hello-la
+kubectl rollout undo deployments hello-la
+kubectl rollout pause deployment hello-la
+kubectl rollout resume deployment hello-la
+
+Yaml file:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx_deploy
+  replicas: 2 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: nginx_deploy
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.8
+        ports:
+        - containerPort: 80
+		  
+---
+Secret (kubectl get secret)
+
+Command to create secret -->
+kubectl create secret generic mysql-pass --from-literal=password=root
+
+yaml to use secret in a pod
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql
+  labels:
+    app: mysql_1
+spec:
+  containers:
+    - image: mysql:5.6
+      name: mysql
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+      ports:
+        - containerPort: 3306
+          name: mysql
+      volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+  volumes:
+    - name: mysql-persistent-storage
+      hostPath:
+        path: /data
+        type: DirectoryOrCreate
+		
+---
+
+DaemonSet (kubectl get ds)
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-ds
+spec:
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      containers:
+      - name: fluentd
+        image: gcr.io/google-containers/fluentd-elasticsearch:1.20
+  selector:
+    matchLabels:
+      app: fluentd
+	  
+---
+

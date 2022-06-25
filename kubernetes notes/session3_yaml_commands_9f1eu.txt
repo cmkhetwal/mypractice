@@ -1,0 +1,139 @@
+kubectl get po
+kubectl get po -o wide --show-labels
+kubectl label pod myfirstpod application=nginx
+kubectl label pod myfirstpod application-
+
+kubectl get svc
+kubectl get endpoints
+kubectl describe svc "service_name"
+kubectl get endpoints "service_name"
+kubectl run lb-pod --image=nginx
+kubectl expose pod lb-pod --type=LoadBalancer --port 80 --target-port 80 --name lbsvc
+
+kubectl get rc
+kubectl describe rc "rc_name"
+
+kubectl get rs
+kubectl describe rs "rs_name"
+-----------------------------------------------------------------------------------------------------------
+For GKE --> please execute below command to have firewall rule created for node port services (30000-32767)
+gcloud compute firewall-rules create test-node-port --allow tcp:30000-32767
+-----------------------------------------------------------------------------------------------------------
+[root@k8s-master ~]# cat yaml/ng_pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myfirstpod
+  labels:
+    app: webserver
+spec:
+  containers:
+    - image: nginx:latest
+      name: nginxcontainer
+	  
+---
+
+[root@k8s-master ~]# cat clusterIP.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: myfirstpod-service
+spec:
+  selector:
+    app: webserver
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+  
+---
+
+[root@k8s-master ~]# cat nodeport.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-nodeport
+spec:
+  selector:
+    run: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort
+  
+---
+
+[root@k8s-master ~]# cat replicationcontroller.yaml
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: rc-nginx
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+		
+---
+
+[root@k8s-master tmp]# cat mysql_rs1.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql
+  labels:
+    app: mysql_1
+spec:
+  containers:
+    - image: mysql:5.6
+      name: mysql
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: root
+		  
+---
+
+[root@k8s-master tmp]# cat mysql_rs2.yaml
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mysqlrs
+  labels:
+    app: mysql
+spec:
+  replicas: 3
+  selector:
+    matchExpressions:
+      - {key: app, operator: In, values: [mysql_1, mysql_2]}
+  template:
+    metadata:
+      name: mysql
+      labels:
+        app: mysql_2
+    spec:
+      containers:
+        - image: mysql:5.6
+          name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+
+---
+
+
+
