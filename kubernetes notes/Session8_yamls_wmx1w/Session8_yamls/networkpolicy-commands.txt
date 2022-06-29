@@ -1,0 +1,23 @@
+kubectl create ns networkdemo
+kubectl create -f app.yaml
+kubectl get pods -n networkdemo
+kubectl expose deploy interpoddemo --port=80 --type=NodePort -n networkdemo
+kubectl run -n networkdemo demopod --rm -ti --image busybox /bin/sh
+wget -q --timeout=5 http://interpoddemo/index.php -O -
+kubectl create -f deny-ingress.yaml
+
+kubectl run -n networkdemo demopod --rm -ti --image busybox /bin/sh
+wget -q --timeout=5 http://interpoddemo/index.php -O -
+
+# wget -q --timeout=5 http://interpoddemo/index.php -O -
+wget: download timed out
+
+kubectl create -f allow-ingress-webserver.yaml
+kubectl run -n networkdemo demopod --rm -ti --image busybox /bin/sh
+wget -q --timeout=5 http://interpoddemo/index.php -O -
+
+
+Troubleshooting commands -->
+kubectl logs <pod_name>
+kubectl describe po <pod_name> or kubectl describe deploy <deploy_name>
+kubectl get po <pod_name> -o yaml

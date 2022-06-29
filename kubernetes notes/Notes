@@ -1,0 +1,856 @@
+Kubernetes Notes
+----------------
+Day-1
+\\\\\
+Kubernetes cluster on google cloud using GKE (google kubernetes engine)
+
+Set the region and zone, and enbale the container api and container registry api
+
+gcloud projects list
+gcloud config set project <project_id_obtained from above command>
+gcloud config set compute/region us-central1
+gcloud config set compute/zone us-central1-a
+gcloud config set compute/region us-central1
+gcloud config set compute/zone us-central1-a
+gcloud services enable container.googleapis.com
+gcloud services enable containerregistry.googleapis.com
+=========================================================================================================
+Create the cluster --> 
+gcloud container clusters create hello-cluster --num-nodes=2
+gcloud container clusters get-credentials hello-cluster
+=========================================================================================================
+Delete the cluster --> 
+gcloud container clusters delete hello-cluster
+=========================================================================================================
+Kubectl commands -->
+
+kubectl version
+Client Version: version.Info{Major:"1", Minor:"19", GitVersion:"v1.19.4", GitCommit:"d360454c9bcd1634cf4cc52d1867af5491dc9c5f", GitTreeState:"clean", BuildDate:"2020-11-11T13:17:17Z", GoVersion:"go1.15.2", Compiler:"gc", Platform:"linux/amd64"}
+Server Version: version.Info{Major:"1", Minor:"16+", GitVersion:"v1.16.15-gke.4300", GitCommit:"7ed5ddc0e67cb68296994f0b754cec45450d6a64", GitTreeState:"clean", BuildDate:"2020-10-28T09:23:22Z", GoVersion:"go1.13.15b4", Compiler:"gc", Platform:"linux/amd64"}
+
+kubectl version --short
+Client Version: v1.19.4
+Server Version: v1.16.15-gke.4300
+
+kubectl get nodes
+NAME                                           STATUS   ROLES    AGE   VERSION
+gke-hello-cluster-default-pool-f2ab891b-gjx1   Ready    <none>   83s   v1.16.15-gke.4300
+gke-hello-cluster-default-pool-f2ab891b-hp77   Ready    <none>   81s   v1.16.15-gke.4300
+
+kubectl get namespaces
+NAME              STATUS   AGE
+default           Active   2m4s
+kube-node-lease   Active   2m6s
+kube-public       Active   2m6s
+kube-system       Active   2m6s
+
+kubectl get pods --namespace kube-system
+NAME                                                        READY   STATUS    RESTARTS   AGE
+event-exporter-gke-77cccd97c6-v8t8q                         2/2     Running   0          2m58s
+fluentd-gke-f4gtt                                           2/2     Running   0          74s
+fluentd-gke-fx7rm                                           2/2     Running   0          30s
+fluentd-gke-scaler-54796dcbf7-trjxb                         1/1     Running   0          2m54s
+gke-metrics-agent-gwxdr                                     1/1     Running   0          2m42s
+gke-metrics-agent-l48k7                                     1/1     Running   0          2m40s
+kube-dns-7bb4975665-7jhtl                                   4/4     Running   0          2m26s
+kube-dns-7bb4975665-8ht4r                                   4/4     Running   0          2m58s
+kube-dns-autoscaler-645f7d66cf-hbtsn                        1/1     Running   0          2m53s
+kube-proxy-gke-hello-cluster-default-pool-f2ab891b-gjx1     1/1     Running   0          2m42s
+kube-proxy-gke-hello-cluster-default-pool-f2ab891b-hp77     1/1     Running   0          2m40s
+l7-default-backend-678889f899-2jdqr                         1/1     Running   0          2m58s
+metrics-server-v0.3.6-64655c969-676sx                       2/2     Running   0          2m17s
+prometheus-to-sd-n4tkf                                      1/1     Running   0          2m42s
+prometheus-to-sd-tql7w                                      1/1     Running   0          2m40s
+stackdriver-metadata-agent-cluster-level-6f96787bd8-vxl8l   2/2     Running   0          2m
+
+kubectl run nginx-test --image=nginx
+pod/nginx-test created
+
+kubectl get pods
+NAME         READY   STATUS    RESTARTS   AGE
+nginx-test   1/1     Running   0          43s
+
+kubectl exec -it nginx-test bash
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+root@nginx-test:/#
+
+kubectl delete pod  nginx-test
+pod "nginx-test" deleted
+=====================================================================================================
+
+Day -2 
+================
+
+Please execute all the below commands on master and worker node unless specified specially
+
+create centos machines for master and worker (2 CPU each vm are must and internet should be working on vm, 4 GB of ram per vm will suffice)
+
+
+
+Install Docker
+	sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+	sudo yum-config-manager --add-repo   https://download.docker.com/linux/centos/docker-ce.repo
+	sudo yum update -y && sudo yum install -y   containerd.io-1.2.13   docker-ce-19.03.11   docker-ce-cli-19.03.11   
+	mkdir /etc/docker
+
+cat <<EOF | sudo tee /etc/docker/daemon.json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2",
+  "storage-opts": [
+    "overlay2.override_kernel_check=true"
+  ]
+}
+EOF
+
+	sudo mkdir -p /etc/systemd/system/docker.service.d
+	sudo systemctl daemon-reload
+	systemctl restart docker
+	systemctl status docker
+	systemctl enable docker
+	
+	
+Create Kubernetes repo
+
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+enabled=1
+gpgcheck=0
+EOF
+
+
+Install Kubeadm, kubelet and kubectl
+	yum install -y kubelet-1.23.1 kubeadm-1.23.1 kubectl-1.23.1
+	systemctl enable --now kubelet
+	systemctl daemon-reload
+	systemctl restart kubelet
+===============================================================================================================================================================  
+
+Please execute below command only on Master node
+   
+Initialize kubernetes cluster  
+	kubeadm init
+	
+	
+The output of the above command will be something like below, please read it carefully as all the next steps are mentioned in the below output only
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Now you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 192.168.1.8:6443 --token kiqsue.s3n83m3gvebtv7tr \
+    --discovery-token-ca-cert-hash sha256:116d4bc46bf16c3bd4270ac68354f4501d07560e14577333d366df18752ee3d0	
+
+===============================================================================================================================================================
+
+Please run below command on master -->
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  
+To deploy pod network run any one of the below command on Master --> 
+
+Either go with calico or flannel, just one command needs to be executed
+
+ CALICO -->  kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+ Flannel --> kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+===============================================================================================================================================================
+Now it's time to add worker to our k8s cluster
+
+The command to add worker node is displayed in the output of your master deployment (kubeadm init)
+
+The below command is the sample command, don't copy and paste as it is, copy the command from your kubeadm init output and run it on worker machine
+
+kubeadm join 192.168.1.8:6443 --token kiqsue.s3n83m3gvebtv7tr \
+    --discovery-token-ca-cert-hash sha256:116d4bc46bf16c3bd4270ac68354f4501d07560e14577333d366df18752ee3d0
+	
+===============================================================================================================================================================
+
+Now we are done creating the cluster start executing some kubectl commands as they are listed in the other file GKE.txt
+
+Reference link for installing --> https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+====================================================================================================================================
+
+Day-3
+========
+kubectl get po
+kubectl get po -o wide --show-labels
+kubectl label pod myfirstpod application=nginx
+kubectl label pod myfirstpod application-
+
+kubectl get svc
+kubectl get endpoints
+kubectl describe svc "service_name"
+kubectl get endpoints "service_name"
+kubectl run lb-pod --image=nginx
+kubectl expose pod lb-pod --type=LoadBalancer --port 80 --target-port 80 --name lbsvc
+
+kubectl get rc
+kubectl describe rc "rc_name"
+
+kubectl get rs
+kubectl describe rs "rs_name"
+-----------------------------------------------------------------------------------------------------------
+For GKE --> please execute below command to have firewall rule created for node port services (30000-32767)
+gcloud compute firewall-rules create test-node-port --allow tcp:30000-32767
+-----------------------------------------------------------------------------------------------------------
+[root@k8s-master ~]# cat yaml/ng_pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myfirstpod
+  labels:
+    app: webserver
+spec:
+  containers:
+    - image: nginx:latest
+      name: nginxcontainer
+	  
+---
+
+[root@k8s-master ~]# cat clusterIP.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: myfirstpod-service
+spec:
+  selector:
+    app: webserver
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+  
+---
+
+[root@k8s-master ~]# cat nodeport.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-nodeport
+spec:
+  selector:
+    run: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort
+  
+---
+
+[root@k8s-master ~]# cat replicationcontroller.yaml
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: rc-nginx
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+		
+---
+
+[root@k8s-master tmp]# cat mysql_rs1.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql
+  labels:
+    app: mysql_1
+spec:
+  containers:
+    - image: mysql:5.6
+      name: mysql
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: root
+		  
+---
+
+[root@k8s-master tmp]# cat mysql_rs2.yaml
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mysqlrs
+  labels:
+    app: mysql
+spec:
+  replicas: 3
+  selector:
+    matchExpressions:
+      - {key: app, operator: In, values: [mysql_1, mysql_2]}
+  template:
+    metadata:
+      name: mysql
+      labels:
+        app: mysql_2
+    spec:
+      containers:
+        - image: mysql:5.6
+          name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+
+---
+
+
+
+=================================================================================================
+
+Day-4
+========
+Deployment -->
+Commands:
+
+kubectl create deployment hello-la --image=nginx:1.19.2
+kubectl get pods
+kubectl get deploy
+kubectl get rs
+kubectl expose deployment hello-la --type=LoadBalancer --port 80 --target-port 80
+kubectl get service
+kubectl scale deployment hello-la --replicas=3
+kubectl autoscale deployment hello-la --max 6 --min 4 --cpu-percent 50
+kubectl set image deployment/hello-la hello-la=nginx:1.19.3
+kubectl rollout history deployment hello-la
+kubectl rollout undo deployments hello-la
+kubectl rollout pause deployment hello-la
+kubectl rollout resume deployment hello-la
+
+Yaml file:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx_deploy
+  replicas: 2 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: nginx_deploy
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.8
+        ports:
+        - containerPort: 80
+		  
+---
+Secret (kubectl get secret)
+
+Command to create secret -->
+kubectl create secret generic mysql-pass --from-literal=password=root
+
+yaml to use secret in a pod
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql
+  labels:
+    app: mysql_1
+spec:
+  containers:
+    - image: mysql:5.6
+      name: mysql
+      env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+      ports:
+        - containerPort: 3306
+          name: mysql
+      volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+  volumes:
+    - name: mysql-persistent-storage
+      hostPath:
+        path: /data
+        type: DirectoryOrCreate
+		
+---
+
+DaemonSet (kubectl get ds)
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-ds
+spec:
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      containers:
+      - name: fluentd
+        image: gcr.io/google-containers/fluentd-elasticsearch:1.20
+  selector:
+    matchLabels:
+      app: fluentd
+	  
+---
+
+==========================================================================================================
+
+Day-5
+========
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard
+provisioner: kubernetes.io/gce-pd
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: testpvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+  storageClassName: standard
+  
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pvc
+spec:
+  containers:
+    - name: myfrontend
+      image: nginx
+      volumeMounts:
+      - mountPath: "/var/www/html"
+        name: mypd
+  volumes:
+    - name: mypd
+      persistentVolumeClaim:
+        claimName: testpvc
+		
+		
+Commands -->
+kubectl get sc
+kubectl get pvc
+kubectl get pv
+		
+---
+1. manual (/etc/kubernetes/manifests) automatically governed by kubelet on master nodes
+---
+
+2. node selector (choose a node using corresponding label) equality based selector
+
+Command to label nodes ->
+kubectl get nodes --show-labels
+kubectl label node k8s-worker app=frontend
+
+To remove label --> 
+kubectl label node k8s-worker app-
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+  nodeSelector:
+    app: frontend
+---
+3. node affinity (set based selector)
+
+Commands to label nodes -->
+
+kubectl label node worker1 zone=us-central-1
+kubectl label node worker2 zone=eu-west-1
+kubectl label node worker2 drbackup=europe
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-affinity-node
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: zone
+            operator: In
+            values:
+            - us-central-1
+            - eu-west-1
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: drbackup
+            operator: In
+            values:
+            - europe
+  containers:
+  - name: nginx
+    image: nginx:latest
+	
+---
+
+4. pod affinity (webserver+redis) utilizes labels of pod's, affinity of a pod to the label of another pod
+   pod anti-affinity (3 nginx pod on different vm's) for HA of pod's, this doesn't hold for node anti-affinity
+   
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cache
+spec:
+  selector:
+    matchLabels:
+      app: cache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cache
+    spec:
+      containers:
+      - name: redis-server
+        image: redis:3.2-alpine
+      nodeSelector:
+        kubernetes.io/hostname: gke-hello-cluster-default-pool-5cc0ce48-fr11
+		
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-redis-cache
+spec:
+  selector:
+    matchLabels:
+      app: web-cache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: web-cache
+    spec:
+      containers:
+      - name: redis-server
+        image: redis:3.2-alpine
+      nodeSelector:
+        kubernetes.io/hostname: gke-hello-cluster-default-pool-5cc0ce48-w041
+		
+---
+
+kind: Deployment
+metadata:
+  name: web-server
+spec:
+  selector:
+    matchLabels:
+      app: web
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - web-cache
+            topologyKey: "kubernetes.io/hostname"
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - cache
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: web-app
+        image: nginx:latest
+		
+---
+
+5. taints and tolerations:
+    applied to nodes, to repel a set of pods
+	running pods will continue
+	new pods look for tolerations
+	toleration is actual definition of taint
+	
+	Commands -->
+	kubectl describe node | grep -i taint
+	kubectl taint node k8s-worker app=webserver:NoSchedule
+	kubectl taint node k8s-worker app:NoSchedule-
+	
+apiVersion: v1
+kind: Pod
+metadata:
+ name: toleration-pod
+spec:
+ containers:
+ - name: nginx
+   image: nginx
+ tolerations:
+ - key: "app"
+   operator: "Equal"
+   value: "webserver"
+   effect: "NoSchedule"
+
+
+ =================================================================================================
+
+ Day-6
+ ========
+
+ Authentication
+
+useradd -m developer
+
+mkdir developercerts
+
+cd developercerts
+
+openssl genrsa -out user.key
+
+openssl req -new -key user.key -out user.csr -subj "/CN=developer/O=dev"
+
+cat > developer_csr.yaml <<EOF
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: dev-user-request
+spec:
+  request: $(cat user.csr | base64 | tr -d '\n')
+  signerName: kubernetes.io/kube-apiserver-client
+  usages:
+  - digital signature
+  - key encipherment
+  - client auth
+EOF
+
+kubectl create -f developer_csr.yaml
+
+kubectl get csr dev-user-request|awk '{$3=$4=""; print $0}'
+
+kubectl certificate approve dev-user-request
+
+kubectl get csr dev-user-request -o jsonpath='{.status.certificate}' | base64 --decode > developer.crt
+
+openssl x509 -noout -text -in developer.crt
+
+cat ~/.kube/config --> to get kubernetes CA certificate
+
+echo "copy-ca-data-from-.kube/config" | base64 -d > ca.crt
+
+cd ..
+
+chown -R developer:developer developercerts/
+
+cp -rp developercerts/ /home/developer/
+
+kubectl create ns development
+
+sudo su developer
+
+cd /home/developer/developercerts/
+
+kubectl config set-cluster usercluster --server=https://34.68.63.223
+
+kubectl config set-cluster usercluster --certificate-authority=ca.crt
+
+kubectl config set-credentials developer --client-key=user.key --client-certificate=developer.crt
+
+kubectl config set-context userspace --cluster=usercluster --namespace=development --user=developer
+
+kubectl config use-context userspace
+
+kubectl get po
+Error from server (Forbidden): pods is forbidden: User "developer" cannot list resource "pods" in API group "" in the namespace "development"
+
+===========================================================================================================================
+
+Authorization
+
+switch to root user/kubeadmin user to create role and rolebinding from below yaml files
+
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: development
+  name: developer-role
+rules:
+- apiGroups: ["", "extensions", "apps"]
+  resources: ["deployments", "replicasets", "pods"]
+  verbs: ["get", "list", "watch", "create"]
+
+
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: development-binding
+  namespace: development
+subjects:
+- kind: User
+  name: developer
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: developer-role
+  apiGroup: ""
+
+
+Switch back to developer user and test creation and deletion of pods
+user will be able to create but not delete.
+
+kubectl run testpod --image=nginx
+pod/testpod created
+
+kubectl get po
+NAME      READY   STATUS    RESTARTS   AGE
+testpod   1/1     Running   0          4s
+
+kubectl delete po testpod
+Error from server (Forbidden): pods "testpod" is forbidden: User "developer" cannot delete resource "pods" in API group "" in the namespace "development"
+
+
+=========================================================================================================================
+
+Day-7
+======
+
+Steps to install Helm version 3
+
+1. wget https://get.helm.sh/helm-v3.5.2-linux-amd64.tar.gz
+2. tar -zxvf helm-v3.5.2-linux-amd64.tar.gz
+3. mv linux-amd64/helm /usr/local/bin/helm
+
+Helm Commands   
+  
+   helm repo list
+   helm repo add jenkins-repo https://charts.jenkins.io
+   helm repo list   
+   helm repo update
+   helm install myjenkins jenkins-repo/jenkins
+   helm create mychart
+   helm package mychart
+   kubectl get po
+   kubectl get svc
+   kubectl get pvc
+   kubectl get pv
+
+   
+Check output of helm install command (example showm below) to get password and URL of jenkins server
+   
+   NOTES:
+1. Get your 'admin' user password by running:
+  kubectl exec --namespace default -it svc/myjenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
+2. Get the Jenkins URL to visit by running these commands in the same shell:
+  echo http://127.0.0.1:8080
+  kubectl --namespace default port-forward svc/myjenkins 8080:8080
+
+
+For exposing jenkins using loadbalancer service run below command    
+
+   kubectl expose pod myjenkins-0 --type=LoadBalancer --port 80 --target-port 8080
+   kubectl get po
+   kubectl get svc (note the external IP and start using jenkins over external IP)
+   
+Command to fetch/download any helm chart
+
+helm fetch jenkins-repo/jenkins --> this will give you tarball of chart, untar it to get the jenkins chart
+
+  
+
+  
+===================================================================================================================
+Prometheus and Grafana
+ 
+helm repo add prometheus-repo https://prometheus-community.github.io/helm-charts
+helm repo add grafana-repo https://grafana.github.io/helm-charts 
+helm install myprometheus prometheus-repo/prometheus
+helm install mygrafana grafana-repo/grafana
+
+Check output of grafana to get admin password of grafana dashboard, something like below
+
+NAME: grafana
+LAST DEPLOYED: Sun Feb 28 01:48:49 2021
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+1. Get your 'admin' user password by running:
+   kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+2. The Grafana server can be accessed via port 80 on the following DNS name from within your cluster:
+   grafana.default.svc.cluster.local
+
+Password --> kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+kubectl expose po mygrafana-56dffbcd6d-lhv87 --type=LoadBalancer --port 80 --target-port 3000
+
+Integrate Prometheus with Grafana by logging on grafana dashboard and use grafana dashboard to see metrics
+Dashboard id 6417 or 159 can be used
+
+================================================================================================================
+
+
+Day-8
+=======
