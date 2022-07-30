@@ -95,8 +95,8 @@ fdisk /dev/sdb
 g
 p
 n
-1
-y
+enter
+enter
 +7G
 p
 w
@@ -105,12 +105,13 @@ mkfs -t ext4 /dev/sdb1
 blkid
 vi /etc/fstab
 copy the uuid and map in directory
+uuid:dsfasdfdsafd /mnt/increase ext4 defaults 0 0
 wq!
 mkdir /mnt/increase
 mount -a
 fdisk /dev/sdb
 n
-2
+enter
 enter
 +13G
 w
@@ -131,20 +132,56 @@ for increasing the partition size first we need to umount the filesystem
 
 umount /mnt/increase
 
+
 fdisk /dev/sdb
 
 p
 d
+1
 n
+1
 2048
-+11G
++11G  --------> here we will get an error or value out of range, because we dont have the free space in the adjacent partition, do we are just saving the deafult 				  agian and quitnig and mounting the same space
+
 enter
 w
 partprobe /dev/sdb
 
+mount -a
+
+
 
 to increase the partition first we need to make space in adjacent sectors, by deleting the partition next to which we want to increase
 but for reduction we dont have to delete the adjacent partition
+
+=========================================================================================================================================
+
+fdisk -l
+fdisk /dev/sdb
+g
+
+umount /dev/sdb1
+unmount /dev/sdb2
+
+mount /dev/sdb1 /mnt/decrease
+mount /dev/sdb2 /mnt/increase
+
+ls -al
+df -kh
+cd /mnt/decrease
+ls -al 
+mv i* /mnt/increase
+cd /mnt/increase
+mv d* /mnt/decrease
+cd
+ls -al
+df -kh
+vi /etc/fstab
+put comment in /mnt/increase
+wq!
+mount -a
+df -kh
+
 
 
 
