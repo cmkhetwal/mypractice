@@ -83,6 +83,69 @@ blkid
 
 we can also extend the lv via lvextend command
 
+==================================================================================
+
+Disk growing and reduce in LVM and Standard partition
+
+==================================================================================
+
+standard ( fdisk, resize2fs, e2fsck)
+
+fdisk /dev/sdb
+g
+p
+n
+1
+y
++7G
+p
+w
+partprobe /dev/sdb
+mkfs -t ext4 /dev/sdb1
+blkid
+vi /etc/fstab
+copy the uuid and map in directory
+wq!
+mkdir /mnt/increase
+mount -a
+fdisk /dev/sdb
+n
+2
+enter
++13G
+w
+p
+partprobe /dev/sdb
+mkfs -t ext4 /dev/sdb2
+vi fstab 
+mount /dev/sdb2 /mnt/decrease
+df -kh
+
+touch /mnt/increase/test
+mkdir /mnt/increase/newfolder
+
+touch /mnt/decrease/file1
+mkdir /mnt/decrease/newfolder
+
+for increasing the partition size first we need to umount the filesystem
+
+umount /mnt/increase
+
+fdisk /dev/sdb
+
+p
+d
+n
+2048
++11G
+enter
+w
+partprobe /dev/sdb
+
+
+to increase the partition first we need to make space in adjacent sectors, by deleting the partition next to which we want to increase
+but for reduction we dont have to delete the adjacent partition
+
 
 
 
