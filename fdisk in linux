@@ -1,0 +1,88 @@
+fdisk -l
+fdisk /dev/sdb
+m
+n
+p
+enter
+enter
++11T
+w
+
+partprobe /dev/sdb
+cat /proc/partitions
+lsblk
+blkid
+
+to get the dick in blkid , we need to format the newly created partition
+
+mkfs -t ext4 /dev/sdb1
+
+blkid
+mkdir /mnt/partition1
+df -kh
+mount /dev/sdb1 /mnt/partition1
+df -kh
+
+parted
+select /dev/sdb
+print free
+
+now make the partition persistent
+vi /etc/fstab
+
+umount /mnt/partition1
+
+we will add the partitoin wothout mounting
+just get the blkid and add in etc/fstab
+
+then scan the mount points via mount -a
+
+blkid
+copy the new partition id 
+vi /etc/fstab
+UUID=id /mnt/partition1 ext4 defaults 0 0
+now save the file and quit
+
+mount -a
+
+df -kh
+========================================================
+LVM
+logical volume management
+if we want to use entire disk and attach it to the mount point then we just create a filesystem on it and mount via
+
+mkfs -t ext4 /dev/sdc
+mkdir /mnt/entiredisk
+mount /dev/sdc /mnt/entiredisk
+blkid
+put this is in fstab
+
+here we create a VG (volume group) out of PV(physical volume), once the VG is create then we create LV(logical volume), now format and mount via fstab
+
+
+lvmdiskscan
+yum install lvm2 -y
+lvmdiskscan
+pvs
+pvcreate /dev/sdd
+pvs
+pvcreate /dev/sde
+pvcreate /dev/sdf
+pvs
+pvdisplay
+vgcreate myvg /dev/sdd /dev/sde /dev/sdf
+vgs
+vgdisplay
+lvcreate -L 60G -n prodlv myvg
+lvs
+vgs
+mkfs -t ext4 /dev/myvg/prod
+blkid
+
+/dev/mapper is for LVM volume, this is what we need to map in fstab after creation of lv
+
+we can also extend the lv via lvextend command
+
+
+
+
