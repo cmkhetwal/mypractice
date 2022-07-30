@@ -183,6 +183,51 @@ mount -a
 df -kh
 
 
+now we have swaped the partitions as required, so that we can increase
+
+first take the backup of the mounted filesystems, which needs a resize
+
+lets increase now
+
+# For increasing
+# first resize 
+# then grow
+
+# for reducing
+# first shrink
+# then resize
+
+umount /dev/sdb2
+df -kh
+
+e2fsck -f /dev/sdb2
+fdisk /dev/sdb
+p
+copy the start sector of number 2 partition
+d
+2
+p
+n
+2
+paste the start sector of 2 , earlier copied
++17G
+w
+partprobe /dev/sdb
+now before mounting we need to resize or grow the partition
+e2fsck /dev/sdb2
+resize2fs /dev/sdb2
+
+now mount
+mount /dev/sdb2 /mnt/increase
+df -kh
+size should be 17GB now
+
+also confirm the data
+========================================================================
+Now lets do the decrease 1
+
+
+
 
 
 
