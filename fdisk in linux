@@ -226,6 +226,29 @@ also confirm the data
 ========================================================================
 Now lets do the decrease 1
 
+umount /dev/sdb1
+e2fsck -f /dev/sdb1
+resize2fs /dev/sdb1 3G
+lsblk
+fdisk /dev/sdb
+p
+d
+1
+n
+1
+2048
++3G
+w
+partprobe /dev/sdb
+lsblk
+e2fsck -f /dev/sdb1
+mount /dev/sdb1 /mnt/decrease
+now check and confirm the data in mount point
+
+
+parted /dev/sdb
+
+
 
 
 
