@@ -248,7 +248,54 @@ now check and confirm the data in mount point
 
 parted /dev/sdb
 
+===================================================================================
 
+Now resizing in LVM
+
+add additional disks
+create pv
+yum install lvm2 -y
+pvcreate /dev/sdd
+pvcreate /dev/sde
+
+vgcreate myvg /dev/sdd /dev/sde
+vgs
+vgdisplay
+pv
+pvdisplay
+lvcreate -L 10G -n lvinc myvg
+lvcreate -L 20G -n lvdec myvg
+lvs
+lvdisplay
+blkid
+mkfs -t ext4 /dev/myvg/lvinc
+mkfs -t ext4 /dev/myvg/lvdec
+blkid
+mkdir /mnt/lvinc
+mkdir /mnt/lvdec
+mount /dev/myvg/lvinc /mnt/lvinc
+mount /dev/myvg/lvdec /mnt/lvdec
+df -kh
+
+for increasing the size of lv first check the capacity of the vg
+vgs
+lvextend -L +5G /dev/myvg/lvinc
+df -kh
+resize2fs /dev/myvg/lvinc
+df -kh
+===================================================================================================
+Now reduction of lvm
+==================================
+for reducing the size of lv, we need to umount the volume first after backup of data
+
+umount /dev/myvg/lvdec
+e2fsck -f /dev/myvg/lvdec
+resize2fs /de/v/myvg/lvdec +15G 
+lvreduce -L 15G /dev/myvg/lvdec
+y
+mount /dev/myvg/lvdec /mnt/lvdec
+df -kh
+==============================================================
 
 
 
