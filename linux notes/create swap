@@ -1,0 +1,42 @@
+how to create swap
+free -h
+fdisk -l
+parted /dev/sdb
+print free
+fdisk /dev/sdb
+p
+n
+4
+enter
+enter
+w
+partprobe /dev/sdb
+lsblk
+fdisk -l
+now we need to chnage the file system of the partition created for swap frmo linux filesystem to swap
+fdisk /dev/sdb
+m
+l   -----> 19 is the swap type
+t
+4    -----> this is the partition number created for swap
+19
+p
+w
+partprobe /dev/sdb
+lsblk
+fdisk -l
+mkswap /dev/sdb4
+blkid
+now make an entry of the uuid of swap partition in fstab
+vi /erc/fstab
+uuid=id swap swap defaults 0 0
+wq!
+swapon -a
+free -h
+swapon -s
+
+to disable the swap
+
+swapoff -a
+free -h
+
