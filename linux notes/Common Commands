@@ -4,3 +4,19 @@ scp sourceuser@sourcehost:/path/to/source/file destinationuser@destinationhost:/
 
 scp -r filename root@remoteip:/tmp
 
+1. Download RPM packages with all dependencies using "Downloadonly" plugin
+yum install yum-plugin-downloadonly
+yum install --downloadonly <package-name>
+yum install --downloadonly --downloaddir=<directory> <package-name>
+yum install --downloadonly --downloaddir=/root/mypackages/ httpd
+
+yum install --downloadonly --downloaddir=/root/mypackages/ httpd-2.2.6-40.el7
+yum install --downloadonly --downloaddir=/root/mypackages/ httpd vsftpd
+
+Link :- https://ostechnix.com/download-rpm-package-dependencies-centos/
+
+
+2. Download RPM packages with all dependencies using "Yumdownloader" utility
+yum install yum-utils
+yumdownloader httpd
+
