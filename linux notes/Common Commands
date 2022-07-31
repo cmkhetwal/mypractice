@@ -1,0 +1,6 @@
+Common Commands
+===========================
+scp sourceuser@sourcehost:/path/to/source/file destinationuser@destinationhost:/path/to/destination/
+
+scp -r filename root@remoteip:/tmp
+
