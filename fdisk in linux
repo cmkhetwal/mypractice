@@ -298,6 +298,28 @@ df -kh
 ==============================================================
 
 
+Now extend the vg from standard disk free space
+
+we have the standard disk of /dev/sdb
+fdisk /dev/sdb
+n
+enter
+enter
+enter
+w
+partprobe /dev/sdb
+blkid
+lsblk
+pvcreate /dev/sdb3
+vgextend myvg /dev/sdb3
+vgs
+vgdisplay
+pvs
+pvdisplay
+
+
+
+
 
 
 
