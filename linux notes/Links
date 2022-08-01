@@ -1,2 +1,58 @@
 Links
 ===================
+
+vi testfile
+insert
+write somthing
+wq!
+cat testfile
+ln -s testfile test
+ls -al
+cat test
+cat testfile
+
+content is the same
+
+-s is used for soft link, if we dont put -s then it will be hard link
+
+rm -rf testfile
+ls -al
+link will become in red color, which means the link is broken
+
+cat test
+rm -rf test
+ls -al
+
+mkdir abc
+cd abc
+touch file1 file2 file3
+vi file1
+insert
+heloo
+wq!
+pwd
+ln -s abc cba
+ls -al
+cd cba
+pwd
+pwd -P 
+pwd -L
+
+===========================================
+Inodes ---------> index node ---------------> every file or every directory------------>
+ls -al --inodes
+ls -ali
+
+soft links can be created from source to any partitions or file system, but hard links will only be created within the same partition of file system
+
+how to preserve the links
+
+cp -d filelinkname newfilename
+
+vi filelinkname
+insert
+GM
+wq!
+cat filelinkname
+cat newfilename
+mv filename filenewname2

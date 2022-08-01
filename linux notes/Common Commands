@@ -20,3 +20,32 @@ Link :- https://ostechnix.com/download-rpm-package-dependencies-centos/
 yum install yum-utils
 yumdownloader httpd
 
+
+Linux find largest file in directory recursively using find
+du -ah /home/cmk/ | sort -h -r | head -n 20
+find /home/cmk/ -type f -printf "%s\t%p\n" | sort -n | tail -20
+du -hsx /home/cmk/* | sort -rh | head -10
+find /home/cmk/Downloads/ -printf '%s %p\n'| sort -nr | head -10
+
+
+/dev/mapper/centosvg-dslv: UUID="3afad7b7-96fa-462c-85e8-dc4614acf458" TYPE="ext4"
+
+If you want to execute scp command i background so that no other processes affected then you have to use following command:
+
+Code:
+$ nohup SOME_COMMAND &
+“nohup” command is used to run Linux command in background. Let’s know more about it.
+
+there is one essential thing with scp command that it require password authentication to execute process in background. Enter the following command :
+
+Code:
+$ nohup scp file_to_copy user@server:/path/to/copy/the/file > nohup.out 2>&1
+After entering the above command now you have to press ctrl +z to suspend the command temporarily and again enter following command:
+
+Code:
+$ bg
+Through this command the entire process will start executing in background.
+
+https://hoststud.com/resources/how-to-run-scp-command-as-a-background-process.297/
+
+
