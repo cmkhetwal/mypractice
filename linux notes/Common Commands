@@ -13,12 +13,20 @@ yum install --downloadonly --downloaddir=/root/mypackages/ httpd
 yum install --downloadonly --downloaddir=/root/mypackages/ httpd-2.2.6-40.el7
 yum install --downloadonly --downloaddir=/root/mypackages/ httpd vsftpd
 
+rpm -ivh *.rpm --nodeps --force 
+
 Link :- https://ostechnix.com/download-rpm-package-dependencies-centos/
 
 
 2. Download RPM packages with all dependencies using "Yumdownloader" utility
 yum install yum-utils
 yumdownloader httpd
+
+
+
+pip download packagename -d folderpathtokeepthepackage
+cd to folder where packages are kept and then run the mentioned command one by one
+pip install pythonpackage -f ./ --no-index --no-deps 
 
 
 Linux find largest file in directory recursively using find
@@ -47,5 +55,15 @@ $ bg
 Through this command the entire process will start executing in background.
 
 https://hoststud.com/resources/how-to-run-scp-command-as-a-background-process.297/
+
+
+To Run Timer in Linux run the mentioned command:-
+start=$(date +%s)
+while true; do
+    time="$(($(date +%s) - $start))"
+    printf '%s\r' "$(date -u -d "@$time" +%H:%M:%S)"
+done
+
+========================
 
 
