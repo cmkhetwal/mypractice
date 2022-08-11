@@ -66,4 +66,18 @@ done
 
 ========================
 
+to get mb size out of byte
+
+byte/1024/1024
+
+to get gb size out of byte
+
+byte/1024/1024/1024
+
+https://techglimpse.com/failed-metadata-repo-appstream-centos-8/  ------------> when package installation fails in linux and not updating via yum
+
+
+
+
+
 

@@ -1,0 +1,26 @@
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDY0RiwMhUpCtqihZKxRHPkh4gfJ6HZPhfRJAciCb1Rzkf5sWPaB2I1PKQ5WWNwIm3S33Z/3fuiRGxHcNLdHLSGEetFEN2wHCgfeJPudOcbVcFsu6fwHfU5+MA5ssgYMpaYzBqkBMDRgr+U19PTdc2vXVI8VWH4ebSIa0I3b5zx5xrbICwTsKw8MJBwh86yRHvsztXMiL34AHldQXQWKkX0nq7HdYlci/xMaL0jBidztutOV1kW/4PQh/HSAVs+H4ZnYCm5zv2yiSphhT6V0KMidYQTQcZPLJPAVmhJ+gqcO80y/5x+O2wYO6pwaOQ0WBXw2qCXfYVJ14Vz/u0dcgbF root@ip-172-31-39-166.ap-southeast-1.compute.internal
+
+
+
+manage acl create user adminuser1 password i^1vJ&Da2lyy4d2 roles superuser
+manage acl create user adminuser2 password Na3GhMTsA63%&5u roles superuser
+manage acl create user devuser password h14OQYC!s&4dsaR roles read-write-udf
+
+manage acl create user dsuser password CDHhyS52#$GgqU0 roles dsrole
+manage acl create role dsrole priv read-write-udf ns bidderionl  
+manage acl grant role dsrole priv read-write-udf ns aggregate
+
+manage acl grant user dsuser roles dsrole
+manage acl grant user devuser roles read-write-udf
+
+
+manage acl set-password user devuser password h14OQYC!s&4dsaR
+manage acl set-password user dsuser password CDHhyS52#$GgqU0
+
+To,
+Chandra Mohan Khetwal
+Melaram Colony Near Kanankunj
+next to time square mall
+sahastradhara road
+dehradun - 248001
+Mobile - 9536748497
