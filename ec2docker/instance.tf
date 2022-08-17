@@ -1,7 +1,7 @@
 resource "aws_instance" "test-instances" {
-  ami  = "ami-04505e74c0741db8d"
-  count = "3"
-  instance_type = "t2.large"
+  ami  = "ami-08d4ac5b634553e16"
+  count = "1"
+  instance_type = "t2.medium"
   key_name = "devops"
   security_groups = [ "launch-wizard-5" ]
   user_data = <<-EOF
