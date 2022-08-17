@@ -1,0 +1,325 @@
+fdisk -l
+fdisk /dev/sdb
+m
+n
+p
+enter
+enter
++11T
+w
+
+partprobe /dev/sdb
+cat /proc/partitions
+lsblk
+blkid
+
+to get the dick in blkid , we need to format the newly created partition
+
+mkfs -t ext4 /dev/sdb1
+
+blkid
+mkdir /mnt/partition1
+df -kh
+mount /dev/sdb1 /mnt/partition1
+df -kh
+
+parted
+select /dev/sdb
+print free
+
+now make the partition persistent
+vi /etc/fstab
+
+umount /mnt/partition1
+
+we will add the partitoin wothout mounting
+just get the blkid and add in etc/fstab
+
+then scan the mount points via mount -a
+
+blkid
+copy the new partition id 
+vi /etc/fstab
+UUID=id /mnt/partition1 ext4 defaults 0 0
+now save the file and quit
+
+mount -a
+
+df -kh
+========================================================
+LVM
+logical volume management
+if we want to use entire disk and attach it to the mount point then we just create a filesystem on it and mount via
+
+mkfs -t ext4 /dev/sdc
+mkdir /mnt/entiredisk
+mount /dev/sdc /mnt/entiredisk
+blkid
+put this is in fstab
+
+here we create a VG (volume group) out of PV(physical volume), once the VG is create then we create LV(logical volume), now format and mount via fstab
+
+
+lvmdiskscan
+yum install lvm2 -y
+lvmdiskscan
+pvs
+pvcreate /dev/sdd
+pvs
+pvcreate /dev/sde
+pvcreate /dev/sdf
+pvs
+pvdisplay
+vgcreate myvg /dev/sdd /dev/sde /dev/sdf
+vgs
+vgdisplay
+lvcreate -L 60G -n prodlv myvg
+lvs
+vgs
+mkfs -t ext4 /dev/myvg/prod
+blkid
+
+/dev/mapper is for LVM volume, this is what we need to map in fstab after creation of lv
+
+we can also extend the lv via lvextend command
+
+==================================================================================
+
+Disk growing and reduce in LVM and Standard partition
+
+==================================================================================
+
+standard ( fdisk, resize2fs, e2fsck)
+
+fdisk /dev/sdb
+g
+p
+n
+enter
+enter
++7G
+p
+w
+partprobe /dev/sdb
+mkfs -t ext4 /dev/sdb1
+blkid
+vi /etc/fstab
+copy the uuid and map in directory
+uuid:dsfasdfdsafd /mnt/increase ext4 defaults 0 0
+wq!
+mkdir /mnt/increase
+mount -a
+fdisk /dev/sdb
+n
+enter
+enter
++13G
+w
+p
+partprobe /dev/sdb
+mkfs -t ext4 /dev/sdb2
+vi fstab 
+mount /dev/sdb2 /mnt/decrease
+df -kh
+
+touch /mnt/increase/test
+mkdir /mnt/increase/newfolder
+
+touch /mnt/decrease/file1
+mkdir /mnt/decrease/newfolder
+
+for increasing the partition size first we need to umount the filesystem
+
+umount /mnt/increase
+
+
+fdisk /dev/sdb
+
+p
+d
+1
+n
+1
+2048
++11G  --------> here we will get an error or value out of range, because we dont have the free space in the adjacent partition, do we are just saving the deafult 				  agian and quitnig and mounting the same space
+
+enter
+w
+partprobe /dev/sdb
+
+mount -a
+
+
+
+to increase the partition first we need to make space in adjacent sectors, by deleting the partition next to which we want to increase
+but for reduction we dont have to delete the adjacent partition
+
+=========================================================================================================================================
+
+fdisk -l
+fdisk /dev/sdb
+g
+
+umount /dev/sdb1
+unmount /dev/sdb2
+
+mount /dev/sdb1 /mnt/decrease
+mount /dev/sdb2 /mnt/increase
+
+ls -al
+df -kh
+cd /mnt/decrease
+ls -al 
+mv i* /mnt/increase
+cd /mnt/increase
+mv d* /mnt/decrease
+cd
+ls -al
+df -kh
+vi /etc/fstab
+put comment in /mnt/increase
+wq!
+mount -a
+df -kh
+
+
+now we have swaped the partitions as required, so that we can increase
+
+first take the backup of the mounted filesystems, which needs a resize
+
+lets increase now
+
+# For increasing
+# first resize 
+# then grow
+
+# for reducing
+# first shrink
+# then resize
+
+umount /dev/sdb2
+df -kh
+
+e2fsck -f /dev/sdb2
+fdisk /dev/sdb
+p
+copy the start sector of number 2 partition
+d
+2
+p
+n
+2
+paste the start sector of 2 , earlier copied
++17G
+w
+partprobe /dev/sdb
+now before mounting we need to resize or grow the partition
+e2fsck /dev/sdb2
+resize2fs /dev/sdb2
+
+now mount
+mount /dev/sdb2 /mnt/increase
+df -kh
+size should be 17GB now
+
+also confirm the data
+========================================================================
+Now lets do the decrease 1
+
+umount /dev/sdb1
+e2fsck -f /dev/sdb1
+resize2fs /dev/sdb1 3G
+lsblk
+fdisk /dev/sdb
+p
+d
+1
+n
+1
+2048
++3G
+w
+partprobe /dev/sdb
+lsblk
+e2fsck -f /dev/sdb1
+mount /dev/sdb1 /mnt/decrease
+now check and confirm the data in mount point
+
+
+parted /dev/sdb
+
+===================================================================================
+
+Now resizing in LVM
+
+add additional disks
+create pv
+yum install lvm2 -y
+pvcreate /dev/sdd
+pvcreate /dev/sde
+
+vgcreate myvg /dev/sdd /dev/sde
+vgs
+vgdisplay
+pv
+pvdisplay
+lvcreate -L 10G -n lvinc myvg
+lvcreate -L 20G -n lvdec myvg
+lvs
+lvdisplay
+blkid
+mkfs -t ext4 /dev/myvg/lvinc
+mkfs -t ext4 /dev/myvg/lvdec
+blkid
+mkdir /mnt/lvinc
+mkdir /mnt/lvdec
+mount /dev/myvg/lvinc /mnt/lvinc
+mount /dev/myvg/lvdec /mnt/lvdec
+df -kh
+
+for increasing the size of lv first check the capacity of the vg
+vgs
+lvextend -L +5G /dev/myvg/lvinc
+df -kh
+resize2fs /dev/myvg/lvinc
+df -kh
+===================================================================================================
+Now reduction of lvm
+==================================
+for reducing the size of lv, we need to umount the volume first after backup of data
+
+umount /dev/myvg/lvdec
+e2fsck -f /dev/myvg/lvdec
+resize2fs /de/v/myvg/lvdec +15G 
+lvreduce -L 15G /dev/myvg/lvdec
+y
+mount /dev/myvg/lvdec /mnt/lvdec
+df -kh
+==============================================================
+
+
+Now extend the vg from standard disk free space
+
+we have the standard disk of /dev/sdb
+fdisk /dev/sdb
+n
+enter
+enter
+enter
+w
+partprobe /dev/sdb
+blkid
+lsblk
+pvcreate /dev/sdb3
+vgextend myvg /dev/sdb3
+vgs
+vgdisplay
+pvs
+pvdisplay
+
+
+
+
+
+
+

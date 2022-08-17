@@ -1,0 +1,64 @@
+NFS
+=================
+
+yum install nfs-utils -y
+systemctl status nfs-server
+systemctl start nfs-server
+systemctl enable nfs-server
+
+create a share in server
+
+mkdir /root/nfsshare
+
+mow mount the share on other machine
+
+on the server
+vi /etc/exports
+insert
+/root/nfsshare ipofremotemachine/subnetmask(rw,sync,no_root_squash)
+wq!
+exportfs -avr
+cat /var/lib/nfs/etab
+
+-a -----will read /etc/exports
+v  ------verbose
+r  ------------- var/lib/nfs/etab
+exportfs -avr
+cat /var/lib/nfs/etab
+
+showmount -e ipofremoteserver
+
+
+on client machine
+showmount -e ipoflocalmachine
+
+mount -t nfs nfsserverip:/root/nfsshare /mnt
+cd /mnt
+ls -al
+touch file1
+
+now check this file in nfs server share folder
+
+on nfs server
+cd /root/nfsshare
+ls -al
+
+on client
+
+make it persistent
+vi /etc/fstab
+ipofnfsshareserver:/root/nfsshare /mnt nfs defaults 0 0
+wq!
+mount -a
+
+
+if we need to remove the export then go to nfs server
+
+vi /etc/exports
+comment the line of exports
+wq!
+exportfs -avr
+
+check on client now
+nfs share should be removed
+

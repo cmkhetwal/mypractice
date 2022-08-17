@@ -1,0 +1,83 @@
+Common Commands
+===========================
+scp sourceuser@sourcehost:/path/to/source/file destinationuser@destinationhost:/path/to/destination/
+
+scp -r filename root@remoteip:/tmp
+
+1. Download RPM packages with all dependencies using "Downloadonly" plugin
+yum install yum-plugin-downloadonly
+yum install --downloadonly <package-name>
+yum install --downloadonly --downloaddir=<directory> <package-name>
+yum install --downloadonly --downloaddir=/root/mypackages/ httpd
+
+yum install --downloadonly --downloaddir=/root/mypackages/ httpd-2.2.6-40.el7
+yum install --downloadonly --downloaddir=/root/mypackages/ httpd vsftpd
+
+rpm -ivh *.rpm --nodeps --force 
+
+Link :- https://ostechnix.com/download-rpm-package-dependencies-centos/
+
+
+2. Download RPM packages with all dependencies using "Yumdownloader" utility
+yum install yum-utils
+yumdownloader httpd
+
+
+
+pip download packagename -d folderpathtokeepthepackage
+cd to folder where packages are kept and then run the mentioned command one by one
+pip install pythonpackage -f ./ --no-index --no-deps 
+
+
+Linux find largest file in directory recursively using find
+du -ah /home/cmk/ | sort -h -r | head -n 20
+find /home/cmk/ -type f -printf "%s\t%p\n" | sort -n | tail -20
+du -hsx /home/cmk/* | sort -rh | head -10
+find /home/cmk/Downloads/ -printf '%s %p\n'| sort -nr | head -10
+
+
+/dev/mapper/centosvg-dslv: UUID="3afad7b7-96fa-462c-85e8-dc4614acf458" TYPE="ext4"
+
+If you want to execute scp command i background so that no other processes affected then you have to use following command:
+
+Code:
+$ nohup SOME_COMMAND &
+“nohup” command is used to run Linux command in background. Let’s know more about it.
+
+there is one essential thing with scp command that it require password authentication to execute process in background. Enter the following command :
+
+Code:
+$ nohup scp file_to_copy user@server:/path/to/copy/the/file > nohup.out 2>&1
+After entering the above command now you have to press ctrl +z to suspend the command temporarily and again enter following command:
+
+Code:
+$ bg
+Through this command the entire process will start executing in background.
+
+https://hoststud.com/resources/how-to-run-scp-command-as-a-background-process.297/
+
+
+To Run Timer in Linux run the mentioned command:-
+start=$(date +%s)
+while true; do
+    time="$(($(date +%s) - $start))"
+    printf '%s\r' "$(date -u -d "@$time" +%H:%M:%S)"
+done
+
+========================
+
+to get mb size out of byte
+
+byte/1024/1024
+
+to get gb size out of byte
+
+byte/1024/1024/1024
+
+https://techglimpse.com/failed-metadata-repo-appstream-centos-8/  ------------> when package installation fails in linux and not updating via yum
+
+
+
+
+
+

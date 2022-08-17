@@ -1,0 +1,13 @@
+pip download scikit-learn==1.1.1 -d /home/cmk/Videos/librarys
+pip download pandas==1.3.5 -d /home/cmk/Videos/librarys
+pip download PyMySQL -d /home/cmk/Videos/librarys
+pip download fastapi==0.77.0 -d /home/cmk/Videos/librarys
+pip download aerospike==7.0.1 -d /home/cmk/Videos/librarys
+pip download gunicorn==20.1.0 -d /home/cmk/Videos/librarys
+pip download category-encoders==2.4.1 -d /home/cmk/Videos/librarys
+pip download uvicorn==0.17.6 -d /home/cmk/Videos/librarys
+pip download seaborn==0.11.2 -d /home/cmk/Videos/librarys
+pip download notebook==6.4.12 -d /home/cmk/Videos/librarys
+pip download jupyterlab==3.4.4 -d /home/cmk/Videos/librarys
+pip download koalas==1.8.2 -d /home/cmk/Videos/librarys
+pip download ipykernel -d /home/cmk/Videos/librarys
