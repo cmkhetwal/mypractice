@@ -52,7 +52,40 @@ cat filename
 sed  -i 's//wordtobereplaced/wordtobereplacedwith/g' sienfiled
 
 
-how to kill a process
+system is running slow
+hostname
+df -kh | grep -v tmpfs
+du -ah / | sort -nr | more
+top
+free -m
+lsmem
+cat /proc/meminfo
+vmstat
+top
+pmap PID
+dmidcode | more
+lscpu
+cat /proc/cpuinfo
+df -h
+iostat -y 5
+ifconfig
+tcpdump -i enps03
+tcpdump -i enps03 | grep ipaddress  -----------here the ip adress is of which you want to moniter like your db server,app server
+
+lsof -i -P -n
+lsof -i -P -n | grep 22
+netstat -plnt
+ss -plnt
+iftop ---------------for this we need to install it via yum first
+
+tail -100 mesages | grep error
+cat messages | grep error
+cat messages | grep -i warning
+cat messages | grep -i fail
+
+
+
+
 
 
 
