@@ -1,0 +1,20 @@
+script to delete old files
+
+#find /home/centos -mtime +90 -exec ls -l {} \;
+
+vi viewoldfiles
+#!/bin/bash
+find /home/centos -mtime +90 -exec ls -l {} \;
+!wq
+chmod a+x viewoldfiles
+./viewoldfiles
+
+
+Now delete the files
+
+vi deleteoldfiles
+#!/bin/bash
+find /home/centos -mtime +90 -exec rm {} \;
+!wq
+chmod a+x deleteoldfiles
+./deleteoldfiles
