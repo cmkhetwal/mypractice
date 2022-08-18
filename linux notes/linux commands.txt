@@ -18,3 +18,46 @@ find /home/centos -mtime +90 -exec rm {} \;
 !wq
 chmod a+x deleteoldfiles
 ./deleteoldfiles
+
+
+Now rename the old files
+vi renameoldfiles
+#!/bin/bash
+find /home/centos -mtime +90 -exec mv {} {}.old \;
+!wq
+chmod a+x renameoldfiles
+./renameoldfiles
+
+to create the file with older date/timestamp
+touch -d "Thu, 1 March 2018 12:30:00" filename
+
+disk space issue
+df -h
+df -h | grep -v tmpfs
+create a temp file with size to increase the disk usage
+fallocate -l 3G /tmp/fillup
+df -h | grep -v tmpfs
+
+now you will see the disk usage increased
+du -a / | sort -nr | more
+du -sh /tmp/fillup
+badblocks -v /dev/sda   ---------------this is to check if the disk has some bad blocks
+
+need to change every instance of a word in a file
+cat filename
+vi filename
+:1,$s/wordtobereplaced/wordtobereplacedwith/
+
+cat filename
+sed  -i 's//wordtobereplaced/wordtobereplacedwith/g' sienfiled
+
+
+how to kill a process
+
+
+
+
+
+
+
+
