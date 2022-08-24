@@ -76,6 +76,19 @@ byte/1024/1024/1024
 
 https://techglimpse.com/failed-metadata-repo-appstream-centos-8/  ------------> when package installation fails in linux and not updating via yum
 
+ps -ef | grep java > java.txt
+awk '{ print $11 }' java.txt
+
+scp -i /home/chandra/keys/sing-ion.pem /home/chandra/Downloads/jarfiles/adserver-exchange-jar-with-dependencies.jar  centos@13.214.147.124:
+scp -i /home/chandra/keys/sing-ion.pem /home/chandra/Downloads/jarfiles/adserver-exchange-jar-with-dependencies.jar  centos@13.250.99.117:
+scp -i /home/chandra/keys/sing-ion.pem /home/chandra/Downloads/jarfiles/adserver-exchange-jar-with-dependencies.jar  centos@54.151.187.225:
+scp -i /home/chandra/keys/sing-ion.pem /home/chandra/Downloads/jarfiles/adserver-exchange-jar-with-dependencies.jar centos@54.255.206.219:
+scp -i /home/chandra/keys/sing-ion.pem /home/chandra/Downloads/jarfiles/adserver-exchange-jar-with-dependencies.jar  centos@54.251.95.247:
+scp -i /home/chandra/keys/sing-ion.pem /home/chandra/Downloads/jarfiles/adserver-exchange-jar-with-dependencies.jar  centos@54.179.179.116:
+
+
+
+
 
 
 
