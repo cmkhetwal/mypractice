@@ -90,8 +90,14 @@ programs and service management
 =================================
 
 
+grow disk in aws instance
+growpart /dev/nvme0n1 1
+xfs_growfs /dev/nvme0n1p1
 
+To Create bootable disk via terminal 
+sudo ddrescue HBCD_PE_x64.iso /dev/sdb1 --force -D
 
+Here sdb1 is the pendrive partition
 
 
 
