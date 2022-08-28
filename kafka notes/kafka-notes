@@ -1,0 +1,97 @@
+key will make the data to go in specific partition based on hashing algorithm
+
+if we do not have the key associated with the msg vi producer then the data will go randemly to any partition via round robin method
+
+every position of the message is called offset in partition
+
+within partition we have order and sequence maintained by offset sequence but we dont have the order in global like in same topic in multiple partitions
+
+to consume a message via consumer, consumer should know, { topic name, partition number, offset number }
+
+consumer can decide which data consumer want to consume from the whole data
+
+consumer will read the data from only the leader partition of topic
+
+producer will only write to leader partition of the topic
+
+ISR - in sync replica
+
+in the event of the failure of leader, then any ISR follower will be elected as leader, if multiple ISR then anyone can be elected.
+
+how to check which partition has the ISR
+
+
+how to create kafka topic
+
+cd /usr/lib/kafkafolder/
+bin/kafka-topics.sh help
+
+bin/kafka-topics.sh --zookeeper localhost:2181 --list
+
+bin/kafka-topics.sh --zookeeper localhost:2181 --topic myfirsttopic --partitions 3 --replication-factor 3 --create  ---------> here if the cluster is running with 3 brokers then the data will be in three nodes, if you have only one broker then use replication factor with 1
+
+bin/kafka-topics.sh --zookeeper localhost:2181 --topic myfirsttopic --describe
+
+bin/kafka-console-consumer.sh help
+
+bin/kafka-console-consumer.sh --zookeeper --localhost:2181 --topic myfirsttopic
+
+cd /opt/kafka/
+
+ls bin
+
+bin/kafka-console-producer.sh --broker-list --localhost:9092 --topic myfirsttopic   ---->this will give you console and you can type anything
+
+
+bin/kafka-topics.sh --zookeeper localhost:2181 --list
+
+bidrequest
+
+
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic bidrequest
+
+To run the kafka
+
+[Unit]
+Description=Zookeeper Service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/zookeeper/bin/
+PIDFile=/opt/zookeeper/bin/data/zookeeper_server.pid
+SyslogIdentifier=zookeeper
+User=zookeeper
+Group=zookeeper
+ExecStart=/opt/zookeeper/bin/zkServer.sh start
+ExecStop=/opt/zookeeper/bin/zkServer.sh stop
+Restart=always
+TimeoutSec=20
+SuccessExitStatus=130 143
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
+
+To run kafka
+1- bin/zookeeper-server-start.sh config/zookeeper.properties
+2- bin/kafka-server-start.sh config/server.properties
+3- bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+
+Now run producer 
+bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic test
+
+Now run Consumer
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test
+
+Now check if the messages are coming via producer to consumer
+
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --topic test --describe
+
+
+
+
+
+
