@@ -1,1 +1,14 @@
-ad
+linger ms - it is time period when the msg are put to kafka partition like in every 10 ms , 100 ms etc
+
+batch is a collection of messages which will trigger msg to put in partition once the defind size is reached in kafka
+
+one producer can not produce the data to multiple topics
+
+multiple producers can produce the data to one topic
+
+a consumer can consume the data from any number of topics
+
+__consumer__offset (consumer topic) ----------> cosumer---topic--partition---offset  (this information is maintained by  the kafka consumer __consumer__offset , so that next time the kafka consumer is not reading the old data data again.)
+
+
+
