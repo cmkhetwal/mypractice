@@ -100,10 +100,29 @@ sudo ddrescue HBCD_PE_x64.iso /dev/sdb1 --force -D
 Here sdb1 is the pendrive partition
 
 
+get unique records from zip file
+sudo zcat eventLog_2022-07-24-*|grep -i "hashed-msisdn"|awk -F'"hashed-msisdn":' '{print $2}'|awk -F'"' '{print $2}'|sort|uniq -c|wc -l
 
 
 
+to get public ip of ec2 from terminal within the EC2
+curl -s ifconfig.co
+
+To Get volumeID of run disk from inside EC2
+yum install nvme-cli
+nvme list
+
+Node             SN                   Model                                    Namespace Usage                      Format           FW Rev  
+---------------- -------------------- ---------------------------------------- --------- -------------------------- ---------------- --------
+/dev/nvme0n1     vol0fa1b3d71c589b94c Amazon Elastic Block Store               1         107.37  GB / 107.37  GB    512   B +  0 B   1.0     
+/dev/nvme1n1     vol0703f2cc7823fd6f8 Amazon Elastic Block Store               1         268.44  GB / 268.44  GB    512   B +  0 B   1.0     
+/dev/nvme2n1     vol0e0ad5bf9e5f776a3 Amazon Elastic Block Store               1         268.44  GB / 268.44  GB    512   B +  0 B   1.0     
+/dev/nvme3n1     vol0be8affe7d2289ec5 Amazon Elastic Block Store               1         429.50  GB / 429.50  GB    512   B +  0 B   1.0     
+/dev/nvme4n1     vol043399673e4b5e1f6 Amazon Elastic Block Store               1         179.31  GB / 179.31  GB    512   B +  0 B   1.0     
+/dev/nvme5n1     vol098a0ed7e839256ea Amazon Elastic Block Store               1         268.44  GB / 268.44  GB    512   B +  0 B   1.0     
+/dev/nvme6n1     vol01e2f43cba50c4a72 Amazon Elastic Block Store               1         429.50  GB / 429.50  GB    512   B +  0 B   1.0     
+/dev/nvme7n1     vol0983b2d12ee5f11a4 Amazon Elastic Block Store               1         429.50  GB / 429.50  GB    512   B +  0 B   1.0     
 
 
-
-
+To Free RAM in ec2 run :
+echo 3 > /proc/sys/vm/drop_caches

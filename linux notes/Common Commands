@@ -89,7 +89,8 @@ scp -i /home/chandra/keys/sing-ion.pem /home/chandra/Downloads/jarfiles/adserver
 
 
 
-
+curl command to get response time:-
+curl -o /dev/null -s -w 'Total: %{time_total}s\n'  "http://10.0.0.99:9091/adserver/xchng/MOMS?purl=www.blogspot.com&dm=cdn.torcai.com&adid=Originals_TVPage_MainScreen_Area4&date=1662717644305&_=1662717644259"
 
 
 
